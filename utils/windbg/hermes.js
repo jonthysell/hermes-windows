@@ -5,7 +5,7 @@
  * @format
  */
 
-function findThreadWithFrame(frameStr) {
+function findThreadsWithFrame(frameStr) {
     const threads = [];
 
     const curProcess = host.currentProcess;
@@ -25,10 +25,48 @@ function findThreadWithFrame(frameStr) {
     return threads;
 }
 
+function findFramesWithType(typeStr) {
+    const frames = [];
+
+    const curProcess = host.currentProcess;
+    for (const thread of curProcess.Threads)
+    {
+        for (const frame of thread.Stack.Frames)
+        {
+            var locals = frame.LocalVariables;
+
+            let hasType = false;
+
+            for (const varName in locals) {
+                const local = locals[varName];
+
+                if (local !== undefined && varName == 's') {
+                    hasType = true;
+                    break;
+                }
+            }
+
+            if (hasType) {
+                frames.push(frame);
+            }
+        }
+    }
+
+    return frames;
+}
+
 function findHermesThreads() {
-    return findThreadWithFrame('hermes!');
+    return findThreadsWithFrame('hermes!');
 }
 
 function findHermesInspectorThreads() {
-    return findThreadWithFrame('hermesinspector!');
+    return findThreadsWithFrame('hermesinspector!');
+}
+
+function findReactNativeThreads() {
+    return findThreadsWithFrame('Microsoft_ReactNative!');
+}
+
+function findHermesFrames() {
+    return findFramesWithType('hermes::vm::')
 }
